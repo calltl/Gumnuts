@@ -1,7 +1,23 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <classpath>
 	<classpathentry kind="src" path="src"/>
+	<classpathentry kind="src" path="mods/vertx.web-server-v1.0"/>
 	<classpathentry kind="con" path="org.scala-ide.sdt.launching.SCALA_CONTAINER"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/JavaSE-1.7"/>
+	<classpathentry kind="lib" path="lib/vertx/vertx-core-1.3.1.final.jar"/>
+	<classpathentry kind="lib" path="lib/vertx/vertx-platform-1.3.1.final.jar"/>
+	<classpathentry kind="lib" path="lib/vertx/vertx-lang-java-1.3.1.final.jar"/>
+	<classpathentry kind="lib" path="lib/vertx/hazelcast-2.4.1.jar"/>
+	<classpathentry kind="lib" path="lib/vertx/netty-3.5.9.Final.jar"/>
+	<classpathentry kind="lib" path="lib/logging/slf4j-api-1.7.2.jar" sourcepath="lib/logging/slf4j-api-1.7.2-sources.jar"/>
+	<classpathentry kind="lib" path="lib/logging/logback-classic-1.0.9.jar" sourcepath="lib/logging/logback-classic-1.0.9-sources.jar"/>
+	<classpathentry kind="lib" path="lib/logging/logback-core-1.0.9.jar" sourcepath="lib/logging/logback-core-1.0.9-sources.jar"/>
+	<classpathentry kind="lib" path="lib/hipadaba/org.eclipse.emf.common-2.8.0.v20130125-0546.jar" sourcepath="lib/hipadaba/org.eclipse.emf.common.source-2.8.0.v20130125-0546.jar"/>
+	<classpathentry kind="lib" path="lib/hipadaba/org.eclipse.emf.commonj.sdo-2.4.0.v200902171115.jar"/>
+	<classpathentry kind="lib" path="lib/hipadaba/org.eclipse.emf.ecore-2.8.3.v20130125-0546.jar" sourcepath="lib/hipadaba/org.eclipse.emf.ecore.source-2.8.3.v20130125-0546.jar"/>
+	<classpathentry kind="lib" path="lib/hipadaba/org.eclipse.emf.ecore.change-2.8.0.v20130125-0546.jar"/>
+	<classpathentry kind="lib" path="lib/hipadaba/org.eclipse.emf.ecore.xmi-2.8.1.v20130125-0546.jar"/>
+	<classpathentry kind="lib" path="lib/hipadaba/org.eclipse.emf.ecore.sdo-2.4.0.v200902171115.jar"/>
+	<classpathentry kind="lib" path="lib/hipadaba/ch.psi.sics.hipadaba-1.8.0-SNAPSHOT.jar" sourcepath="lib/hipadaba/ch.psi.sics.hipadaba-1.8.0-SNAPSHOT-sources.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>
