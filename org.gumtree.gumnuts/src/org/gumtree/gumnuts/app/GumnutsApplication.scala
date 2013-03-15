@@ -1,21 +1,21 @@
-package test.vertx.scala
+package org.gumtree.gumnuts.app
 
 import org.vertx.java.deploy.Verticle
-import org.vertx.java.core.logging.Logger
+import org.gumtree.gumnuts.ScalaVerticle
 import org.vertx.java.core.json.JsonObject
-import org.vertx.java.core.Handler
+import org.gumtree.gumnuts.rest.RestServerVerticle
+import org.gumtree.gumnuts.services.JvmStatusVerticle
+import org.gumtree.gumnuts.sics.SicsManagerVerticle
 
-class Application extends Verticle {
-
-  lazy val logger: Logger = container.getLogger()
+class GumnutsApplication extends ScalaVerticle {
 
   def start() = {
     // Rest web server
-//    deployVericle(classOf[RestServerVerticle].getName())
+    deployVericle(classOf[RestServerVerticle].getName())
     // Jvm statistics
-//    deployVericle(classOf[JvmStatusVerticle].getName())
+    deployVericle(classOf[JvmStatusVerticle].getName())
     // Sics manager
-//    deployVericle(classOf[SicsManagerVerticle].getName())
+    deployVericle(classOf[SicsManagerVerticle].getName(), container.getConfig().getObject("sics"))
     // Web server
     val config: JsonObject = new JsonObject()
     config.putString("web_root", "web")
@@ -23,12 +23,10 @@ class Application extends Verticle {
     config.putString("host", "localhost")
     config.putNumber("port", 8070)
     deployModule("vertx.web-server-v1.0", config)
-    // Authenication manager
-//    deployModule("vertx.auth-mgr-v1.1")
   }
-
-  private def deployVericle(verticle: String) = {
-    container.deployVerticle(verticle)
+  
+  private def deployVericle(verticle: String, config: JsonObject = null) = {
+    container.deployVerticle(verticle, config)
     logger.info("Deployed verticle " + verticle)
   }
   
@@ -36,5 +34,5 @@ class Application extends Verticle {
     container.deployModule(module, config)
     logger.info("Deployed module " + module)
   }
-
+  
 }

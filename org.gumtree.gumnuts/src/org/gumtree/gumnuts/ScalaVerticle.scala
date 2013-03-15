@@ -1,0 +1,12 @@
+package org.gumtree.gumnuts
+
+import org.vertx.java.core.logging.Logger
+import org.vertx.java.deploy.Verticle
+import org.vertx.java.core.eventbus.EventBus
+
+abstract class ScalaVerticle extends Verticle with VerticleConstants {
+
+  lazy val logger: Logger = container.getLogger()
+  lazy val eventBus: EventBus = vertx.eventBus()
+  
+}

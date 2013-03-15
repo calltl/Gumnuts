@@ -19,5 +19,7 @@
 	<classpathentry kind="lib" path="lib/hipadaba/org.eclipse.emf.ecore.xmi-2.8.1.v20130125-0546.jar"/>
 	<classpathentry kind="lib" path="lib/hipadaba/org.eclipse.emf.ecore.sdo-2.4.0.v200902171115.jar"/>
 	<classpathentry kind="lib" path="lib/hipadaba/ch.psi.sics.hipadaba-1.8.0-SNAPSHOT.jar" sourcepath="lib/hipadaba/ch.psi.sics.hipadaba-1.8.0-SNAPSHOT-sources.jar"/>
+	<classpathentry kind="lib" path="lib/vertx/jackson-core-asl-1.9.4.jar"/>
+	<classpathentry kind="lib" path="lib/vertx/jackson-mapper-asl-1.9.4.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>
