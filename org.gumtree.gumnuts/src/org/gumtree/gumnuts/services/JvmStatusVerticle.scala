@@ -21,7 +21,7 @@ class JvmStatusVerticle extends ScalaVerticle {
   lazy val server = ManagementFactory.getPlatformMBeanServer()
 
   def start() = {
-    eventBus.registerHandler(ACTION_GET_JVM_STATUS, new Handler[Message[JsonObject]] {
+    eventBus.registerHandler(ACTION_JVM_GET_STATUS, new Handler[Message[JsonObject]] {
       def handle(message: Message[JsonObject]) = {
         message.reply(process())
       }

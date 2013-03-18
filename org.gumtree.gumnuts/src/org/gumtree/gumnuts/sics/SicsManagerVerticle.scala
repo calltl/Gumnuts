@@ -10,12 +10,12 @@ class SicsManagerVerticle extends ScalaVerticle {
   
   def start() = {
     var generalConfig = new JsonObject()
-    generalConfig.putString(CONFIG_CHANNEL_NAME, CHANNEL_GENERAL)
+    generalConfig.putString(CONFIG_SICS_CHANNEL_NAME, CONST_SICS_CHANNEL_GENERAL)
     generalConfig.mergeIn(container.getConfig())
     container.deployVerticle(classOf[SicsChannelVerticle].getName(), generalConfig)
     
     var statusConfig = new JsonObject()
-    statusConfig.putString(CONFIG_CHANNEL_NAME, CHANNEL_STATUS)
+    statusConfig.putString(CONFIG_SICS_CHANNEL_NAME, CONST_SICS_CHANNEL_STATUS)
     statusConfig.mergeIn(container.getConfig())
     container.deployVerticle(classOf[SicsChannelVerticle].getName(), statusConfig)
     

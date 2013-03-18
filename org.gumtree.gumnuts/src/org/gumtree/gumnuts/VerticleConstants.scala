@@ -2,24 +2,28 @@ package org.gumtree.gumnuts
 
 trait VerticleConstants {
 
-  // JMX
-  def ACTION_GET_JVM_STATUS = "gumtree.jvm.getStatus"
+  // JVM
+  def ACTION_JVM_GET_STATUS = "gumtree.jvm.getStatus"
 
   // SICS
-  def ACTION_CHANNEL_CONNECT = "gumtree.sics.channel.connect"
-  def ACTION_CHANNEL_DISCONNECT = "gumtree.sics.channel.disconnect"
-  def ACTION_CHANNEL_SEND = "gumtree.sics.channel.send"
+  def ACTION_SICS_CHANNEL_SEND = "gumtree.sics.channel.send"
     
-  def EVENT_CHANNEL_SEND = "gumtree.sics.channel.reply"  
-  def EVENT_CHANNEL_STATUS = "gumtree.sics.channel.status"
+  def EVENT_SICS_CHANNEL_STATUS = "gumtree.sics.channel.status"
   
-  def CONFIG_CHANNEL_NAME = "name"
-  def CONFIG_CHANNEL_HOST = "host"
-  def CONFIG_CHANNEL_PORT = "port"
-  def CONFIG_CHANNEL_LOGIN = "login"
-  def CONFIG_CHANNEL_PASSWORD = "password"
+  def CONFIG_SICS_HEADER = "sics"
+  def CONFIG_SICS_HOST = "host"
+  def CONFIG_SICS_PORT = "port"
+  def CONFIG_SICS_LOGIN = "login"
+  def CONFIG_SICS_PASSWORD = "password"
+  def CONFIG_SICS_CHANNEL_NAME = "name"
+    
+  def CONST_SICS_CHANNEL_GENERAL = "general"
+  def CONST_SICS_CHANNEL_STATUS = "status"
 
-  def CHANNEL_GENERAL = "general"
-  def CHANNEL_STATUS = "status"
+  // REST
+  def CONFIG_REST_HEADER = "rest"
+
+  // Web
+  def CONFIG_WEB_HEADER = "web"
 
 }

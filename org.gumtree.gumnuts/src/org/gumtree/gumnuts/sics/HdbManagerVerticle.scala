@@ -21,7 +21,7 @@ class HdbManagerVerticle extends ScalaVerticle {
   var model: SICS = _
 
   def start() = {
-    eventBus.registerHandler(EVENT_CHANNEL_STATUS + "." + CHANNEL_GENERAL, connectionHandler)
+    eventBus.registerHandler(EVENT_SICS_CHANNEL_STATUS + "." + CONST_SICS_CHANNEL_GENERAL, connectionHandler)
   }
 
   val connectionHandler = new Handler[Message[JsonObject]] {
@@ -29,7 +29,7 @@ class HdbManagerVerticle extends ScalaVerticle {
       val status = SicsChannelState.withName(message.body.getString("status"))
       status match {
         case SicsChannelState.CONNECTED => {
-          eventBus.send(ACTION_CHANNEL_SEND + "." + CHANNEL_GENERAL,
+          eventBus.send(ACTION_SICS_CHANNEL_SEND + "." + CONST_SICS_CHANNEL_GENERAL,
               new JsonObject().putString("command", "getgumtreexml /"), loadModelHandler)
         }
         case _ =>

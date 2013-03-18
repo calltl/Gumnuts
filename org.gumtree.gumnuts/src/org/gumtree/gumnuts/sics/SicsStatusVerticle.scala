@@ -8,7 +8,7 @@ import org.vertx.java.core.json.JsonObject
 class SicsStatusVerticle extends ScalaVerticle {
 
   def start() = {
-    eventBus.registerHandler(EVENT_CHANNEL_STATUS + "." + CHANNEL_STATUS, connectionHandler)
+    eventBus.registerHandler(EVENT_SICS_CHANNEL_STATUS + "." + CONST_SICS_CHANNEL_STATUS, connectionHandler)
   }
 
   val connectionHandler = new Handler[Message[JsonObject]] {
@@ -16,13 +16,13 @@ class SicsStatusVerticle extends ScalaVerticle {
       val status = SicsChannelState.withName(message.body.getString("status"))
       status match {
         case SicsChannelState.CONNECTED => {
-          eventBus.send(ACTION_CHANNEL_SEND + "." + CHANNEL_STATUS,
+          eventBus.send(ACTION_SICS_CHANNEL_SEND + "." + EVENT_SICS_CHANNEL_STATUS,
             new JsonObject().putString("command", "hnotify / 1"), hnotifyHandler)
-          eventBus.send(ACTION_CHANNEL_SEND + "." + CHANNEL_STATUS,
+          eventBus.send(ACTION_SICS_CHANNEL_SEND + "." + EVENT_SICS_CHANNEL_STATUS,
             new JsonObject().putString("command", "statemon interest"), statemonInterestHandler)
-          eventBus.send(ACTION_CHANNEL_SEND + "." + CHANNEL_STATUS,
+          eventBus.send(ACTION_SICS_CHANNEL_SEND + "." + EVENT_SICS_CHANNEL_STATUS,
             new JsonObject().putString("command", "statemon hdbinterest"), statemonHdbInterestHandler)
-          eventBus.send(ACTION_CHANNEL_SEND + "." + CHANNEL_STATUS,
+          eventBus.send(ACTION_SICS_CHANNEL_SEND + "." + EVENT_SICS_CHANNEL_STATUS,
             new JsonObject().putString("command", "status interest"), statusInterestHandler)
         }
         case _ =>

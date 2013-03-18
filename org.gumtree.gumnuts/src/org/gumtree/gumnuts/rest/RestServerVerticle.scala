@@ -13,7 +13,7 @@ class RestServerVerticle extends ScalaVerticle {
     val routeMatcher = new RouteMatcher()
     routeMatcher.get("/jmx", new Handler[HttpServerRequest] {
       def handle(request: HttpServerRequest) = {
-        eventBus.send(ACTION_GET_JVM_STATUS, new JsonObject, new Handler[Message[JsonObject]] {
+        eventBus.send(ACTION_JVM_GET_STATUS, new JsonObject, new Handler[Message[JsonObject]] {
           def handle(message: Message[JsonObject]) = {
             request.response.setChunked(true)
             request.response.write(message.body.toString())

@@ -3,6 +3,7 @@ package org.gumtree.gumnuts
 import org.vertx.java.core.logging.Logger
 import org.vertx.java.deploy.Verticle
 import org.vertx.java.core.eventbus.EventBus
+import org.vertx.java.core.json.JsonObject
 
 abstract class ScalaVerticle extends Verticle with VerticleConstants {
 

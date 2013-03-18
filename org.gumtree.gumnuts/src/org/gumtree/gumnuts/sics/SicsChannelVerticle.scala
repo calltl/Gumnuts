@@ -12,9 +12,9 @@ class SicsChannelVerticle extends ScalaVerticle {
   
   def NEWLINE = "\n".getBytes()(0)
 
-  lazy val name: String = container.getConfig.getString(CONFIG_CHANNEL_NAME)
-  lazy val host: String = container.getConfig.getString(CONFIG_CHANNEL_HOST)
-  lazy val port: Int = container.getConfig.getInteger(CONFIG_CHANNEL_PORT)
+  lazy val name: String = container.getConfig.getString(CONFIG_SICS_CHANNEL_NAME)
+  lazy val host: String = container.getConfig.getString(CONFIG_SICS_HOST)
+  lazy val port: Int = container.getConfig.getInteger(CONFIG_SICS_PORT)
   
   var client: NetClient = _
   var socket: NetSocket = _
@@ -27,7 +27,7 @@ class SicsChannelVerticle extends ScalaVerticle {
   def start() = {
     client = vertx.createNetClient()
     client.connect(port, host, connectionHandler)
-    eventBus.registerHandler(ACTION_CHANNEL_SEND + "." + name, sendHandler)
+    eventBus.registerHandler(ACTION_SICS_CHANNEL_SEND + "." + name, sendHandler)
   }
   
   val connectionHandler = new Handler[NetSocket] {
@@ -44,8 +44,8 @@ class SicsChannelVerticle extends ScalaVerticle {
       state match {
         case x if buffer.toString().trim().length() == 0 =>
         case SicsChannelState.CONNECTING => {
-          send(container.getConfig().getString(CONFIG_CHANNEL_LOGIN)
-              + " " + container.getConfig().getString(CONFIG_CHANNEL_PASSWORD))
+          send(container.getConfig().getString(CONFIG_SICS_LOGIN)
+              + " " + container.getConfig().getString(CONFIG_SICS_PASSWORD))
           setState(SicsChannelState.AUTHENICATING)
         }
         case SicsChannelState.AUTHENICATING => {
@@ -87,7 +87,7 @@ class SicsChannelVerticle extends ScalaVerticle {
   def setState(state: SicsChannelState.Value) = {
     logger.info("Channel " + name + " state changed: " + this.state.toString() + " -> " +  state.toString())
     this.state = state
-    eventBus.publish(EVENT_CHANNEL_STATUS + "." + name,
+    eventBus.publish(EVENT_SICS_CHANNEL_STATUS + "." + name,
         new JsonObject().putString("status", state.toString))
   }
 
