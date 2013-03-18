@@ -13,9 +13,9 @@ class SicsStatusVerticle extends ScalaVerticle {
 
   val connectionHandler = new Handler[Message[JsonObject]] {
     def handle(message: Message[JsonObject]) = {
-      val status = SicsChannelState.withName(message.body.getString("status"))
+      val status = SicsChannelStatus.withName(message.body.getString("status"))
       status match {
-        case SicsChannelState.CONNECTED => {
+        case SicsChannelStatus.CONNECTED => {
           eventBus.send(ACTION_SICS_CHANNEL_SEND + "." + EVENT_SICS_CHANNEL_STATUS,
             new JsonObject().putString("command", "hnotify / 1"), hnotifyHandler)
           eventBus.send(ACTION_SICS_CHANNEL_SEND + "." + EVENT_SICS_CHANNEL_STATUS,
@@ -32,6 +32,7 @@ class SicsStatusVerticle extends ScalaVerticle {
 
   val hnotifyHandler = new Handler[Message[JsonObject]] {
     def handle(message: Message[JsonObject]) = {
+      logger.info("hnotify: " + message.body.toString())
     }
   }
 

@@ -7,7 +7,8 @@ trait VerticleConstants {
 
   // SICS
   def ACTION_SICS_CHANNEL_SEND = "gumtree.sics.channel.send"
-    
+  def ACTION_SICS_CHANNEL_GET_STATUS = "gumtree.sics.channel.getStatus"
+
   def EVENT_SICS_CHANNEL_STATUS = "gumtree.sics.channel.status"
   
   def CONFIG_SICS_HEADER = "sics"

@@ -1,6 +1,6 @@
 package org.gumtree.gumnuts.sics
 
-object SicsChannelState extends Enumeration {
+object SicsChannelStatus extends Enumeration {
   
   val DISCONNECTED = Value("disconnect")
   val CONNECTING = Value("connecting")
