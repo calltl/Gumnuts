@@ -23,8 +23,7 @@ object SicsUtils {
     val content = resource.getContents().get(0)
     var sicsModel: SICS = null
     if (content.isInstanceOf[DocumentRoot]) {
-      val documentRoot = content.asInstanceOf[DocumentRoot]
-      sicsModel = documentRoot.getSICS()
+      sicsModel = content.asInstanceOf[DocumentRoot].getSICS()
     } else if (content.isInstanceOf[SICS]) {
       // It case of no OSGi execution, content can be SICSImpl, not
       // DocumentRoot.....very funny.

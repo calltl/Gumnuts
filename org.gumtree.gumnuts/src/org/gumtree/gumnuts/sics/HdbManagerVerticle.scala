@@ -21,8 +21,18 @@ class HdbManagerVerticle extends ScalaVerticle {
 
   def start() = {
     eventBus.registerHandler(EVENT_SICS_CHANNEL_STATUS + "." + CONST_SICS_CHANNEL_GENERAL, connectionHandler)
+//    eventBus.registerHandler(ACTION_SICS_HDB_GET_COMPONENT, arg1)
   }
 
+  /**
+   * **************************************************************************
+   * Event handlers
+   * **************************************************************************
+   */
+  
+  /**
+   * Handler for general channel connection 
+   */
   val connectionHandler = new Handler[Message[JsonObject]] {
     def handle(message: Message[JsonObject]) = {
       val status = SicsChannelStatus.withName(message.body.getString("status"))
@@ -35,6 +45,13 @@ class HdbManagerVerticle extends ScalaVerticle {
       }
     }
   }
+  
+  val getComponentHandler = new Handler[Message[JsonObject]] {
+    def handle(message: Message[JsonObject]) = {
+      message.body.getArray("deviceId")
+    }
+  }
+  
 
   val loadModelHandler = new Handler[Message[JsonObject]] {
     def handle(message: Message[JsonObject]) = {
@@ -48,6 +65,12 @@ class HdbManagerVerticle extends ScalaVerticle {
       logger.info("Hipadaba model loaded")
     }
   }
+  
+  /**
+   * **************************************************************************
+   * Utilities
+   * **************************************************************************
+   */
   
   private def parseComponentModel(component: Component, parent: HdbObject = null): Unit = {
     // Create hdb object

@@ -1,5 +1,8 @@
 package org.gumtree.gumnuts
 
+/**
+ * Application constants
+ */
 trait VerticleConstants {
 
   // JVM
@@ -8,7 +11,9 @@ trait VerticleConstants {
   // SICS
   def ACTION_SICS_CHANNEL_SEND = "gumtree.sics.channel.send"
   def ACTION_SICS_CHANNEL_GET_STATUS = "gumtree.sics.channel.getStatus"
-
+  def ACTION_SICS_MANAGER_GET_STATUS = "gumtree.sics.manager.getStatus"
+  def ACTION_SICS_HDB_GET_COMPONENT = "gumtree.sics.hdb.getComponent"
+    
   def EVENT_SICS_CHANNEL_STATUS = "gumtree.sics.channel.status"
   
   def CONFIG_SICS_HEADER = "sics"

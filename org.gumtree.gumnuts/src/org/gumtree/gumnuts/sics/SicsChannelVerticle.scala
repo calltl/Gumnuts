@@ -12,16 +12,16 @@ class SicsChannelVerticle extends ScalaVerticle {
   
   def NEWLINE = "\n".getBytes()(0)
 
-  lazy val name: String = container.getConfig.getString(CONFIG_SICS_CHANNEL_NAME)
-  lazy val host: String = container.getConfig.getString(CONFIG_SICS_HOST)
-  lazy val port: Int = container.getConfig.getInteger(CONFIG_SICS_PORT)
+  private lazy val name: String = container.getConfig.getString(CONFIG_SICS_CHANNEL_NAME)
+  private lazy val host: String = container.getConfig.getString(CONFIG_SICS_HOST)
+  private lazy val port: Int = container.getConfig.getInteger(CONFIG_SICS_PORT)
   
-  var client: NetClient = _
-  var socket: NetSocket = _
-  var channdelBuffer: Buffer = new Buffer()
-  var bufferMap: Map[Int, Message[JsonObject]] = Map()
-  var status: SicsChannelStatus.Value = SicsChannelStatus.DISCONNECTED
-  var contextId = 1
+  private var client: NetClient = _
+  private var socket: NetSocket = _
+  private var channelBuffer: Buffer = new Buffer()
+  private var bufferMap: Map[Int, Message[JsonObject]] = Map()
+  private var status: SicsChannelStatus.Value = SicsChannelStatus.DISCONNECTED
+  private var contextId = 1
   
   
   def start() = {
@@ -31,7 +31,16 @@ class SicsChannelVerticle extends ScalaVerticle {
     eventBus.registerHandler(ACTION_SICS_CHANNEL_GET_STATUS + "." + name, statusHandler)
   }
   
-  val connectionHandler = new Handler[NetSocket] {
+  /**
+   * **************************************************************************
+   * Event handlers
+   * **************************************************************************
+   */
+  
+  /**
+   * Socket connection handler
+   */
+  private val connectionHandler = new Handler[NetSocket] {
     def handle(socket: NetSocket) = {
       logger.info("Channel " + name + " connected to " + host + ":" + port)
       setStatus(SicsChannelStatus.CONNECTING)
@@ -40,7 +49,7 @@ class SicsChannelVerticle extends ScalaVerticle {
     }
   }
   
-  val socketHandler = new Handler[Buffer] {
+  private val socketHandler = new Handler[Buffer] {
     def handle(buffer: Buffer) = {
       status match {
         case x if buffer.toString().trim().length() == 0 =>
@@ -57,39 +66,41 @@ class SicsChannelVerticle extends ScalaVerticle {
           logger.info("SICS connection ready")
           setStatus(SicsChannelStatus.CONNECTED)
         }
-        case SicsChannelStatus.CONNECTED => handleSicsMessage(buffer)
+        case SicsChannelStatus.CONNECTED => {
+          channelBuffer.appendBuffer(buffer)
+          if (channelBuffer.getByte(channelBuffer.length() - 1) == NEWLINE) {
+            val reply = new JsonObject(channelBuffer.toString().trim())
+            logger.info("SICS reply: " + channelBuffer.toString().trim())
+            // TODO: clean from the buffer map
+            val replyMessage = bufferMap(reply.getInteger("trans"))
+            replyMessage.reply(reply)
+            channelBuffer = new Buffer()
+          }
+        }
       }
     }
   }
   
-  val sendHandler = new Handler[Message[JsonObject]] {
+  private val sendHandler = new Handler[Message[JsonObject]] {
     def handle(message: Message[JsonObject]) = {
       if (status == SicsChannelStatus.CONNECTED) {
     	bufferMap += (contextId -> message)
         val text = "contextdo " + contextId + " " + message.body.getString("command")
         send(text)
         contextId = contextId + 1
-        message.replyAddress
       }
     }
   }
 
-  val statusHandler = new Handler[Message[JsonObject]] {
+  private val statusHandler = new Handler[Message[JsonObject]] {
     def handle(message: Message[JsonObject]) = {
       message.reply(new JsonObject().putString("status", status.toString()))
     }
   }
   
-  def handleSicsMessage(buffer: Buffer) = {
-    channdelBuffer.appendBuffer(buffer)
-    if (channdelBuffer.getByte(channdelBuffer.length() - 1) == NEWLINE) {
-      val reply = new JsonObject(channdelBuffer.toString().trim())
-      logger.info("SICS reply: " + channdelBuffer.toString().trim())
-      val replyMessage = bufferMap(reply.getInteger("trans"))
-      replyMessage.reply(reply)
-      channdelBuffer = new Buffer()
-    }
-  }
+  /****************************************************************************
+   * Properties 
+   ****************************************************************************/
   
   def setStatus(status: SicsChannelStatus.Value) = {
     logger.info("Channel " + name + " status changed: " + this.status.toString() + " -> " +  status.toString())
@@ -98,6 +109,10 @@ class SicsChannelVerticle extends ScalaVerticle {
         new JsonObject().putString("status", status.toString))
   }
 
+  /****************************************************************************
+   * Utilities 
+   ****************************************************************************/
+  
   private def send(text: String) = {
     socket.write(text + "\n")
     logger.info("Channel " + name + " sent: " + text)
