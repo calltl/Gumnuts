@@ -1,35 +1,28 @@
 package org.gumtree.gumnuts.services
 
-import org.junit.Test
 import org.junit.Assert._
-import org.vertx.java.core.Vertx
+import org.junit.Test
 import org.junit.runner.RunWith
-import org.vertx.java.test.junit.VertxJUnit4ClassRunner
-import org.vertx.java.test.VertxConfiguration
-import org.vertx.java.test.VertxAware
-import org.vertx.java.test.VerticleManagerAware
-import org.vertx.java.deploy.impl.VerticleManager
-import org.vertx.java.test.TestVerticle
-import org.vertx.java.core.json.JsonObject
-import org.gumtree.gumnuts.VerticleConstants
+import org.vertx.java.core.Handler
 import org.vertx.java.core.eventbus.Message
+import org.vertx.java.core.json.JsonObject
+import org.vertx.java.test.TestVerticle
+import org.vertx.java.test.VertxConfiguration
+import org.vertx.java.test.junit.VertxJUnit4ClassRunner
+import org.vertx.java.test.utils.CountDownLatchHandler
+import java.util.concurrent.TimeUnit
+import org.gumtree.gumnuts.test.ScalaVerticleTest
 
 @RunWith(classOf[VertxJUnit4ClassRunner])
 @VertxConfiguration
 @TestVerticle(main="org.gumtree.gumnuts.services.JvmStatusVerticle")
-class JvmStatusVerticleTest extends VertxAware with VerticleManagerAware with VerticleConstants {
-
-  private var vertx: Vertx = _
-  private var manager: VerticleManager = _
-
-  def setVertx(vertx: Vertx) = { this.vertx = vertx }
-  def setVerticleManager(manager: VerticleManager) = { this.manager = manager }
- 
-  
+class JvmStatusVerticleTest extends ScalaVerticleTest {
   
   @Test
   def testJvmStatusVerticle() = {
-//    vertx.eventBus().send(EVENT_JVM_GET_STATUS, new JsonObject, { m: Message[JsonObject] => m.body.getObject("data") })
+    val handler = new CountDownLatchHandler[Message[JsonObject]](1)
+    eventBus.send(EVENT_JVM_GET_STATUS, new JsonObject, handler)
+    assertNotNull(handler.poll(10, TimeUnit.SECONDS).body.getObject("data"))
   }
 
 }
