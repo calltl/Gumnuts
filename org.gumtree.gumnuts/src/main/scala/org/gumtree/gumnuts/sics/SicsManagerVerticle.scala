@@ -42,7 +42,7 @@ class SicsManagerVerticle extends ScalaVerticle {
   
   def start() = {
     connectChannel(CONST_SICS_CHANNEL_GENERAL)
-    connectChannel(CONST_SICS_CHANNEL_STATUS)
+//    connectChannel(CONST_SICS_CHANNEL_STATUS)
    
     val connectionHandler = new Handler[Message[JsonObject]] {
       var generalChannelConnected = false
