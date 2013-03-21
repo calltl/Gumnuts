@@ -8,6 +8,10 @@ import org.gumtree.gumnuts.ScalaVerticle
 import org.vertx.java.core.Handler
 import org.vertx.java.core.eventbus.Message
 
+/**
+ * Supported events:
+ * 
+ */
 class SicsManagerVerticle extends ScalaVerticle {
   
   def start() = {

@@ -1,17 +1,15 @@
 package org.gumtree.gumnuts.sics
 
 import java.io.ByteArrayInputStream
-
 import scala.collection.JavaConversions.asScalaBuffer
 import scala.collection.immutable.TreeMap
-
 import org.gumtree.gumnuts.ScalaVerticle
 import org.vertx.java.core.Handler
 import org.vertx.java.core.eventbus.Message
 import org.vertx.java.core.json.JsonObject
-
 import ch.psi.sics.hipadaba.Component
 import ch.psi.sics.hipadaba.SICS
+
 
 class HdbManagerVerticle extends ScalaVerticle {
 
@@ -38,7 +36,7 @@ class HdbManagerVerticle extends ScalaVerticle {
       val status = SicsChannelStatus.withName(message.body.getString("status"))
       status match {
         case SicsChannelStatus.CONNECTED => {
-          eventBus.send(ACTION_SICS_CHANNEL_SEND + "." + CONST_SICS_CHANNEL_GENERAL,
+          eventBus.send(EVENT_SICS_CHANNEL_SEND + "." + CONST_SICS_CHANNEL_GENERAL,
               new JsonObject().putString("command", "getgumtreexml /"), loadModelHandler)
         }
         case _ =>
