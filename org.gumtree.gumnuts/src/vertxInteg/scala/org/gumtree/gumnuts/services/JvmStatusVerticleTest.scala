@@ -14,14 +14,13 @@ import java.util.concurrent.TimeUnit
 import org.gumtree.gumnuts.test.ScalaVerticleTest
 
 @RunWith(classOf[VertxJUnit4ClassRunner])
-@VertxConfiguration
 @TestVerticle(main="org.gumtree.gumnuts.services.JvmStatusVerticle")
 class JvmStatusVerticleTest extends ScalaVerticleTest {
   
   @Test
   def testJvmStatusVerticle() = {
     val handler = new CountDownLatchHandler[Message[JsonObject]](1)
-    eventBus.send(EVENT_JVM_GET_STATUS, new JsonObject, handler)
+    eventBus.send(JvmStatusVerticle.EVENT_GET_STATUS, new JsonObject, handler)
     assertNotNull(handler.poll(10, TimeUnit.SECONDS).body.getObject("data"))
   }
 

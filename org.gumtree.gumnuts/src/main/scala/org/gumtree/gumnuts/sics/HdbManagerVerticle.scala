@@ -10,7 +10,12 @@ import org.vertx.java.core.json.JsonObject
 import ch.psi.sics.hipadaba.Component
 import ch.psi.sics.hipadaba.SICS
 
-
+/**
+ * Supported events:
+ *
+ * 
+ * 
+ */
 class HdbManagerVerticle extends ScalaVerticle {
 
   var model: SICS = _
@@ -18,8 +23,18 @@ class HdbManagerVerticle extends ScalaVerticle {
   var deviceMap: Map[String, HdbObject] = _
 
   def start() = {
-    eventBus.registerHandler(EVENT_SICS_CHANNEL_STATUS + "." + CONST_SICS_CHANNEL_GENERAL, connectionHandler)
-//    eventBus.registerHandler(ACTION_SICS_HDB_GET_COMPONENT, arg1)
+    // Load model
+    eventBus.send(SicsChannelVerticle.EVENT_SEND + "." + CONST_SICS_CHANNEL_GENERAL,
+      new JsonObject().putString("command", "getgumtreexml /"), { m: Message[JsonObject] =>
+        val text = m.body.getString("data")
+        // Convert XML into model
+        model = SicsUtils.loadSICSModel(new ByteArrayInputStream(text.getBytes()))
+        // Convert model into hdb object and cache into maps
+        pathMap = TreeMap[String, HdbObject]()
+        deviceMap = TreeMap[String, HdbObject]()
+        model.getComponent().foreach(parseComponentModel(_))
+        logger.info("Hipadaba model loaded")
+      })
   }
 
   /**
@@ -28,41 +43,12 @@ class HdbManagerVerticle extends ScalaVerticle {
    * **************************************************************************
    */
   
-  /**
-   * Handler for general channel connection 
-   */
-  val connectionHandler = new Handler[Message[JsonObject]] {
-    def handle(message: Message[JsonObject]) = {
-      val status = SicsChannelStatus.withName(message.body.getString("status"))
-      status match {
-        case SicsChannelStatus.CONNECTED => {
-          eventBus.send(EVENT_SICS_CHANNEL_SEND + "." + CONST_SICS_CHANNEL_GENERAL,
-              new JsonObject().putString("command", "getgumtreexml /"), loadModelHandler)
-        }
-        case _ =>
-      }
-    }
-  }
-  
   val getComponentHandler = new Handler[Message[JsonObject]] {
     def handle(message: Message[JsonObject]) = {
       message.body.getArray("deviceId")
     }
   }
   
-
-  val loadModelHandler = new Handler[Message[JsonObject]] {
-    def handle(message: Message[JsonObject]) = {
-      val text = message.body.getString("data")
-      // Convert XML into model
-      model = SicsUtils.loadSICSModel(new ByteArrayInputStream(text.getBytes()))
-      // Convert model into hdb object and cache into maps
-      pathMap = TreeMap[String, HdbObject]()
-      deviceMap = TreeMap[String, HdbObject]()
-      model.getComponent().foreach(parseComponentModel(_))
-      logger.info("Hipadaba model loaded")
-    }
-  }
   
   /**
    * **************************************************************************

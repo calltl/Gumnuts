@@ -6,6 +6,7 @@ import org.vertx.java.core.eventbus.Message
 import org.vertx.java.core.http.HttpServerRequest
 import org.vertx.java.core.http.RouteMatcher
 import org.vertx.java.core.json.JsonObject
+import org.gumtree.gumnuts.services.JvmStatusVerticle
 
 /**
  * RestServerVerticle provides ReSTful web services across HTTP connection 
@@ -20,7 +21,7 @@ class RestServerVerticle extends ScalaVerticle {
     val routeMatcher = new RouteMatcher
     // Handle JMX request
     routeMatcher.get("/jmx", { req: HttpServerRequest =>
-      eventBus.send(EVENT_JVM_GET_STATUS, new JsonObject, { m: Message[JsonObject] =>
+      eventBus.send(JvmStatusVerticle.EVENT_GET_STATUS, new JsonObject, { m: Message[JsonObject] =>
         req.response.setChunked(true).write(m.body.getObject("data").toString).end
       })
     })

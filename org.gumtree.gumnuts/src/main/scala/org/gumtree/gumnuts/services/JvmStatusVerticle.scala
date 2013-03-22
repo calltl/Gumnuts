@@ -16,6 +16,12 @@ import javax.management.ObjectName
 import javax.management.openmbean.CompositeData
 import javax.management.openmbean.TabularData
 
+object JvmStatusVerticle {
+  
+  val EVENT_GET_STATUS = "gumtree.jvm.getStatus"
+
+}
+
 /**
  * Supported events:
  *
@@ -33,7 +39,7 @@ class JvmStatusVerticle extends ScalaVerticle {
   lazy val server = ManagementFactory.getPlatformMBeanServer()
 
   def start() = {
-    eventBus.registerHandler(EVENT_JVM_GET_STATUS, { m: Message[JsonObject] =>
+    eventBus.registerHandler(JvmStatusVerticle.EVENT_GET_STATUS, { m: Message[JsonObject] =>
       logger.info("Generating JVM status...")
       m.reply(process)
       logger.info("Replied JVM status...")
