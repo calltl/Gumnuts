@@ -13,8 +13,6 @@ import ch.psi.sics.hipadaba.SICS
 /**
  * Supported events:
  *
- * 
- * 
  */
 class HdbManagerVerticle extends ScalaVerticle {
 
@@ -35,6 +33,13 @@ class HdbManagerVerticle extends ScalaVerticle {
         model.getComponent().foreach(parseComponentModel(_))
         logger.info("Hipadaba model loaded")
       })
+
+    // Handle value update from SICS
+    eventBus.registerHandler(SicsStatusVerticle.EVENT_HDB_UPDATE_VALUE, { m: Message[JsonObject] =>
+      val path = m.body.getString("path")
+      val hdbObject = pathMap(path)
+      if (hdbObject != null) hdbObject.value = m.body.getString("value")
+    })
   }
 
   /**
@@ -68,7 +73,7 @@ class HdbManagerVerticle extends ScalaVerticle {
     val deviceId = SicsUtils.getDeviceId(component)
     if (deviceId != null) deviceMap += (deviceId -> hdbObject)
     // Recursion
-    component.getComponent().foreach(parseComponentModel(_, parent))
+    component.getComponent().foreach(parseComponentModel(_, hdbObject))
   }
   
 }

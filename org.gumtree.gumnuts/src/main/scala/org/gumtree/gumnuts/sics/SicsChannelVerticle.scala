@@ -7,6 +7,7 @@ import org.vertx.java.core.eventbus.Message
 import org.vertx.java.core.json.JsonObject
 import org.vertx.java.core.net.NetClient
 import org.vertx.java.core.net.NetSocket
+import scala.collection.mutable.Map
 
 object SicsChannelVerticle {
   val STATUS_DISCONNECTED = "disconnect"
@@ -16,6 +17,8 @@ object SicsChannelVerticle {
   val STATUS_CONNECTED = "connected"
     
   val EVENT_SEND = "gumtree.sics.channel.send"
+  val EVENT_STREAM_SEND = "gumtree.sics.channel.streamSend"
+  val EVENT_STREAM_REPLY = "gumtree.sics.channel.streamReply"
   val EVENT_GET_STATUS = "gumtree.sics.channel.getStatus"
   val EVENT_STATUS = "gumtree.sics.channel.status"
 }
@@ -23,15 +26,31 @@ object SicsChannelVerticle {
 /**
  * Supported events:
  *
- * EVENT_SICS_CHANNEL_SEND + .CHANNEL_NAME
+ * EVENT_SEND + .CHANNEL_NAME
  *   Type:
  *     Inbound
  *   Description:
- *     Send command to SICS
+ *     Send command to SICS and expect single reply
  *   Output:
  *     SICS reply
- * 
- * EVENT_SICS_CHANNEL_STATUS
+ *     
+ * EVENT_STREAM_SEND + .CHANNEL_NAME
+ *   Type:
+ *     Inbound
+ *   Description:
+ *     Send command to SICS and expect multiple replies
+ *   Output:
+ *     address - reply address
+ *     
+ * EVENT_STREAM_REPLY + .CHANNEL_NAME + .CONTEXTID
+ *   Type:
+ *     Outbound
+ *   Description:
+ *     Reply from SICS
+ *   Output:
+ *     SICS reply
+ *     
+ * EVENT_STATUS
  *   Type:
  *     Outbound
  *   Description:
@@ -40,11 +59,20 @@ object SicsChannelVerticle {
  *     name - channel name
  *     status - channel status
  *
+ * EVENT_GET_STATUS + .CHANNEL_NAME 
+ *   Type:
+ *     Inbound
+ *   Description:
+ *     Get channel status
+ *   Output:
+ *     status - channel status
+ *     
  */
 class SicsChannelVerticle extends ScalaVerticle {
 
   // Constants
-  private def NEWLINE = "\n".getBytes()(0)
+  private def NEWLINE = "\n"
+  private def NEWLINE_BYTE = NEWLINE.getBytes()(0)
 
   // Configurations
   private lazy val name: String = getConfig.getString(CONFIG_SICS_CHANNEL_NAME)
@@ -69,14 +97,25 @@ class SicsChannelVerticle extends ScalaVerticle {
       socket = s
       socket.dataHandler(socketHandler)
     })
-    // Handle send event
+    
+    // Handle send event (single reply)
     eventBus.registerHandler(SicsChannelVerticle.EVENT_SEND + "." + name, { m: Message[JsonObject] =>
       if (status == SicsChannelVerticle.STATUS_CONNECTED) {
-        bufferMap += (contextId -> m)
+    	bufferMap += (contextId -> m)
         send("contextdo " + contextId + " " + m.body.getString("command"))
         contextId = contextId + 1
       }
     })
+    
+    // Handle send event (stream reply)
+    eventBus.registerHandler(SicsChannelVerticle.EVENT_STREAM_SEND + "." + name, { m: Message[JsonObject] =>
+      if (status == SicsChannelVerticle.STATUS_CONNECTED) {
+        m.reply(new JsonObject().putString("address", SicsChannelVerticle.EVENT_STREAM_REPLY + "." + name + "." + contextId))
+        send("contextdo " + contextId + " " + m.body.getString("command"))
+        contextId = contextId + 1
+      }
+    })
+            
     // Handle get status
     eventBus.registerHandler(SicsChannelVerticle.EVENT_GET_STATUS + "." + name, { m: Message[JsonObject] =>
       m.reply(new JsonObject().putString("status", status.toString))
@@ -101,13 +140,20 @@ class SicsChannelVerticle extends ScalaVerticle {
         }
         case SicsChannelVerticle.STATUS_CONNECTED => {
           channelBuffer.appendBuffer(buf)
-          if (channelBuffer.getByte(channelBuffer.length - 1) == NEWLINE) {
-            val reply = new JsonObject(channelBuffer.toString.trim)
-            logger.info("SICS reply: " + channelBuffer.toString.trim)
-            // TODO: clean from the buffer map
-            val replyMessage = bufferMap(reply.getInteger("trans"))
-            replyMessage.reply(reply)
-            channelBuffer = new Buffer
+          if (channelBuffer.getByte(channelBuffer.length - 1) == NEWLINE_BYTE) {
+            for (s <- channelBuffer.toString.split(NEWLINE)) {
+                logger.info("SICS reply: " + s.trim)
+            	val reply = new JsonObject(s.trim)
+                val replyMessage = bufferMap.remove(reply.getInteger("trans"))
+                if (!replyMessage.isEmpty) {
+                  // Single reply
+                  replyMessage.get.reply(reply)
+                } else {
+                  // Stream reply
+                  eventBus.send(SicsChannelVerticle.EVENT_STREAM_REPLY + "." + name + "." + reply.getInteger("trans"), reply)
+                }
+            	channelBuffer = new Buffer
+            }
           }
         }
       }
