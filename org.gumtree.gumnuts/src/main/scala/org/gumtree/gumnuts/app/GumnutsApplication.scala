@@ -13,13 +13,13 @@ class GumnutsApplication extends ScalaVerticle {
 
   def start() = {
     // Jvm statistics
-    deployVericle(classOf[JvmStatusVerticle].getName())
+    deployVericle(classOf[JvmStatusVerticle].getName)
     // Sics manager
-    deployVericle(classOf[SicsManagerVerticle].getName(), container.getConfig().getObject(CONFIG_SICS_HEADER))
+    deployVericle(classOf[SicsManagerVerticle].getName, container.getConfig.getObject(CONFIG_SICS_HEADER))
     // Rest web server
-    deployVericle(classOf[RestServerVerticle].getName(), container.getConfig().getObject(CONFIG_REST_HEADER))
+    deployVericle(classOf[RestServerVerticle].getName, container.getConfig.getObject(CONFIG_REST_HEADER))
     // Web server
-    deployModule("vertx.web-server-v1.0", container.getConfig().getObject(CONFIG_WEB_HEADER))
+    deployModule("vertx.web-server-v1.0", container.getConfig.getObject(CONFIG_WEB_HEADER))
   }
 
   /**

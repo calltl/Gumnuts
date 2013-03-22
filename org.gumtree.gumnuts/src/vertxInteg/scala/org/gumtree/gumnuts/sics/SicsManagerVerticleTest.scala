@@ -37,12 +37,11 @@ class SicsManagerVerticleTest extends ScalaVerticleTest {
           }
         })
     })
-
     while (!managerReady) {
       Thread.sleep(100)
     }
     
-    eventBus.send(SicsManagerVerticle.EVENT_GET_CHANNELS, new JsonObject, handler)
+    eventBus.send(SicsManagerVerticle.EVENT_GET_CHANNELS, EMPTY_OBJECT, handler)
     val channels = handler.poll(10, TimeUnit.SECONDS).body.getArray("names")
     assertEquals(2, channels.size())
     assertTrue(channels.contains(CONST_SICS_CHANNEL_GENERAL))

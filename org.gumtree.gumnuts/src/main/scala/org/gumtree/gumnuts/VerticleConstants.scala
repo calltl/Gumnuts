@@ -1,10 +1,14 @@
 package org.gumtree.gumnuts
 
+import org.vertx.java.core.json.JsonObject
+
 /**
  * Application constants
  */
 trait VerticleConstants {
 
+  val EMPTY_OBJECT = new JsonObject
+  
   // SICS
   def CONFIG_SICS_HEADER = "sics"
   def CONFIG_SICS_HOST = "host"
