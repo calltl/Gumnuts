@@ -5,6 +5,7 @@ import org.gumtree.gumnuts.rest.RestServerVerticle
 import org.gumtree.gumnuts.services.JvmStatusVerticle
 import org.gumtree.gumnuts.sics.SicsManagerVerticle
 import org.vertx.java.core.json.JsonObject
+import org.gumtree.gumnuts.dae.DaeImageVerticle
 
 /**
  * The application entry point
@@ -12,10 +13,12 @@ import org.vertx.java.core.json.JsonObject
 class GumnutsApplication extends ScalaVerticle {
 
   def start() = {
-    // Jvm statistics
+    // JVM statistics
     deployVericle(classOf[JvmStatusVerticle].getName)
-    // Sics manager
+    // SICS manager
     deployVericle(classOf[SicsManagerVerticle].getName, container.getConfig.getObject(CONFIG_SICS_HEADER))
+    // DAE manager
+    deployVericle(classOf[DaeImageVerticle].getName, container.getConfig.getObject(CONFIG_DAE_HEADER))
     // Rest web server
     deployVericle(classOf[RestServerVerticle].getName, container.getConfig.getObject(CONFIG_REST_HEADER))
     // Web server

@@ -20,6 +20,9 @@ trait VerticleConstants {
   def CONST_SICS_CHANNEL_GENERAL = "general"
   def CONST_SICS_CHANNEL_STATUS = "status"
 
+  // DAE
+  def CONFIG_DAE_HEADER = "dae"
+
   // REST
   def CONFIG_REST_HEADER = "rest"
   def CONFIG_REST_PORT = "port"

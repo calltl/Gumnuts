@@ -70,7 +70,6 @@ class HdbManagerVerticle extends ScalaVerticle {
     
     // Handle get object by path request
     eventBus.registerHandler(HdbManagerVerticle.EVENT_GET_OBJECT_BY_PATH, { m: Message[JsonObject] =>
-      fetchMap.foreach(p => if (!p._2) { println(p._1) })
       val path = m.body.getString("path")
       val hdbObject = pathMap(path)
       m.reply(new JsonObject().putObject("hdb", hdbObject.createJsonObject))
@@ -105,17 +104,14 @@ class HdbManagerVerticle extends ScalaVerticle {
     component.getComponent().foreach(parseComponentModel(_, hdbObject))
   }
   
-  var fetchMap: Map[String, Boolean] = Map()
-  
   private def fetchHdbObjectValue(hdbObject: HdbObject): Unit = {
     val dataType = hdbObject.component.getString("dataType")
     if (dataType == DataType.NONE_LITERAL.getName()) return
-    fetchMap += (hdbObject.path -> false)
     eventBus.send(SicsChannelVerticle.EVENT_SEND + "." + CONST_SICS_CHANNEL_GENERAL, new JsonObject().putString("command", "hget " + hdbObject.path), { m: Message[JsonObject] =>
       val data = m.body.getObject("data")
-      if (dataType == DataType.INT_LITERAL.getName()) { hdbObject.value = data.getNumber(data.getFieldNames.head).toString(); fetchMap+= (hdbObject.path -> true) }
-      else if (dataType == DataType.FLOAT_LITERAL.getName()) { hdbObject.value = data.getNumber(data.getFieldNames.head).toString(); fetchMap+= (hdbObject.path -> true) }
-      else if (dataType == DataType.TEXT_LITERAL.getName()) { hdbObject.value = data.getString(data.getFieldNames.head).toString(); fetchMap+= (hdbObject.path -> true) }
+      if (dataType == DataType.INT_LITERAL.getName()) { hdbObject.value = data.getNumber(data.getFieldNames.head).toString() }
+      else if (dataType == DataType.FLOAT_LITERAL.getName()) { hdbObject.value = data.getNumber(data.getFieldNames.head).toString() }
+      else if (dataType == DataType.TEXT_LITERAL.getName()) { hdbObject.value = data.getString(data.getFieldNames.head).toString() }
     })
   }
   
