@@ -46,8 +46,6 @@ object SicsUtils {
       case e: Exception =>
     }
     return null
-  }
-   
-  
+  }  
 
 }

@@ -11,6 +11,8 @@ import ch.psi.sics.hipadaba.Component
 import ch.psi.sics.hipadaba.SICS
 import scala.collection.JavaConversions._
 import org.vertx.java.core.json.JsonArray
+import org.gumtree.gumnuts.VerticleConstants
+import ch.psi.sics.hipadaba.DataType
 
 object HdbManagerVerticle {
 
@@ -43,6 +45,12 @@ class HdbManagerVerticle extends ScalaVerticle {
         pathMap = TreeMap[String, HdbObject]()
         deviceMap = TreeMap[String, HdbObject]()
         model.getComponent().foreach(parseComponentModel(_))
+        // Get initial values
+        for (value <- pathMap.values) {
+         fetchHdbObjectValue(value)
+         // Slow down ... not to overflow SICS
+         Thread.sleep(1)
+        }
         logger.info("Hipadaba model loaded")
       })
 
@@ -62,6 +70,7 @@ class HdbManagerVerticle extends ScalaVerticle {
     
     // Handle get object by path request
     eventBus.registerHandler(HdbManagerVerticle.EVENT_GET_OBJECT_BY_PATH, { m: Message[JsonObject] =>
+      fetchMap.foreach(p => if (!p._2) { println(p._1) })
       val path = m.body.getString("path")
       val hdbObject = pathMap(path)
       m.reply(new JsonObject().putObject("hdb", hdbObject.createJsonObject))
@@ -94,6 +103,20 @@ class HdbManagerVerticle extends ScalaVerticle {
     if (deviceId != null) deviceMap += (deviceId -> hdbObject)
     // Recursion
     component.getComponent().foreach(parseComponentModel(_, hdbObject))
+  }
+  
+  var fetchMap: Map[String, Boolean] = Map()
+  
+  private def fetchHdbObjectValue(hdbObject: HdbObject): Unit = {
+    val dataType = hdbObject.component.getString("dataType")
+    if (dataType == DataType.NONE_LITERAL.getName()) return
+    fetchMap += (hdbObject.path -> false)
+    eventBus.send(SicsChannelVerticle.EVENT_SEND + "." + CONST_SICS_CHANNEL_GENERAL, new JsonObject().putString("command", "hget " + hdbObject.path), { m: Message[JsonObject] =>
+      val data = m.body.getObject("data")
+      if (dataType == DataType.INT_LITERAL.getName()) { hdbObject.value = data.getNumber(data.getFieldNames.head).toString(); fetchMap+= (hdbObject.path -> true) }
+      else if (dataType == DataType.FLOAT_LITERAL.getName()) { hdbObject.value = data.getNumber(data.getFieldNames.head).toString(); fetchMap+= (hdbObject.path -> true) }
+      else if (dataType == DataType.TEXT_LITERAL.getName()) { hdbObject.value = data.getString(data.getFieldNames.head).toString(); fetchMap+= (hdbObject.path -> true) }
+    })
   }
   
   private def convertComponentToJson(component: Component): JsonObject = {

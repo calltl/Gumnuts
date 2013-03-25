@@ -15,7 +15,7 @@ object SicsChannelVerticle {
   val STATUS_AUTHENICATING = "authenicating"
   val STATUS_INITIALISING = "initialising"
   val STATUS_CONNECTED = "connected"
-    
+
   val EVENT_SEND = "gumtree.sics.channel.send"
   val EVENT_STREAM_SEND = "gumtree.sics.channel.streamSend"
   val EVENT_STREAM_REPLY = "gumtree.sics.channel.streamReply"
@@ -33,7 +33,7 @@ object SicsChannelVerticle {
  *     Send command to SICS and expect single reply
  *   Output:
  *     SICS reply
- *     
+ *
  * EVENT_STREAM_SEND + .CHANNEL_NAME
  *   Type:
  *     Inbound
@@ -41,7 +41,7 @@ object SicsChannelVerticle {
  *     Send command to SICS and expect multiple replies
  *   Output:
  *     address - reply address
- *     
+ *
  * EVENT_STREAM_REPLY + .CHANNEL_NAME + .CONTEXTID
  *   Type:
  *     Outbound
@@ -49,7 +49,7 @@ object SicsChannelVerticle {
  *     Reply from SICS
  *   Output:
  *     SICS reply
- *     
+ *
  * EVENT_STATUS
  *   Type:
  *     Outbound
@@ -59,14 +59,14 @@ object SicsChannelVerticle {
  *     name - channel name
  *     status - channel status
  *
- * EVENT_GET_STATUS + .CHANNEL_NAME 
+ * EVENT_GET_STATUS + .CHANNEL_NAME
  *   Type:
  *     Inbound
  *   Description:
  *     Get channel status
  *   Output:
  *     status - channel status
- *     
+ *
  */
 class SicsChannelVerticle extends ScalaVerticle {
 
@@ -97,16 +97,16 @@ class SicsChannelVerticle extends ScalaVerticle {
       socket = s
       socket.dataHandler(socketHandler)
     })
-    
+
     // Handle send event (single reply)
     eventBus.registerHandler(SicsChannelVerticle.EVENT_SEND + "." + name, { m: Message[JsonObject] =>
       if (status == SicsChannelVerticle.STATUS_CONNECTED) {
-    	bufferMap += (contextId -> m)
+        bufferMap += (contextId -> m)
         send("contextdo " + contextId + " " + m.body.getString("command"))
         contextId = contextId + 1
       }
     })
-    
+
     // Handle send event (stream reply)
     eventBus.registerHandler(SicsChannelVerticle.EVENT_STREAM_SEND + "." + name, { m: Message[JsonObject] =>
       if (status == SicsChannelVerticle.STATUS_CONNECTED) {
@@ -115,49 +115,61 @@ class SicsChannelVerticle extends ScalaVerticle {
         contextId = contextId + 1
       }
     })
-            
+
     // Handle get status
     eventBus.registerHandler(SicsChannelVerticle.EVENT_GET_STATUS + "." + name, { m: Message[JsonObject] =>
       m.reply(new JsonObject().putString("status", status.toString))
     })
   }
 
-  private val socketHandler = { buf: Buffer => 
-      status match {
-        case x if buf.toString.trim.length == 0 =>
-        case SicsChannelVerticle.STATUS_CONNECTING => {
-          send(getConfig.getString(CONFIG_SICS_LOGIN)
-            + " " + getConfig.getString(CONFIG_SICS_PASSWORD))
-          setStatus(SicsChannelVerticle.STATUS_AUTHENICATING)
-        }
-        case SicsChannelVerticle.STATUS_AUTHENICATING => {
-          send("protocol set json")
-          setStatus(SicsChannelVerticle.STATUS_INITIALISING)
-        }
-        case SicsChannelVerticle.STATUS_INITIALISING => {
-          logger.info("Channel " + name + " ready")
-          setStatus(SicsChannelVerticle.STATUS_CONNECTED)
-        }
-        case SicsChannelVerticle.STATUS_CONNECTED => {
-          channelBuffer.appendBuffer(buf)
-          if (channelBuffer.getByte(channelBuffer.length - 1) == NEWLINE_BYTE) {
-            for (s <- channelBuffer.toString.split(NEWLINE)) {
-                logger.info("SICS reply: " + s.trim)
-            	val reply = new JsonObject(s.trim)
-                val replyMessage = bufferMap.remove(reply.getInteger("trans"))
-                if (!replyMessage.isEmpty) {
-                  // Single reply
-                  replyMessage.get.reply(reply)
-                } else {
-                  // Stream reply
-                  eventBus.send(SicsChannelVerticle.EVENT_STREAM_REPLY + "." + name + "." + reply.getInteger("trans"), reply)
-                }
-            	channelBuffer = new Buffer
+  private val socketHandler = { buf: Buffer =>
+    status match {
+      case x if buf.toString.trim.length == 0 =>
+      case SicsChannelVerticle.STATUS_CONNECTING => {
+        send(getConfig.getString(CONFIG_SICS_LOGIN)
+          + " " + getConfig.getString(CONFIG_SICS_PASSWORD))
+        setStatus(SicsChannelVerticle.STATUS_AUTHENICATING)
+      }
+      case SicsChannelVerticle.STATUS_AUTHENICATING => {
+        send("protocol set json")
+        setStatus(SicsChannelVerticle.STATUS_INITIALISING)
+      }
+      case SicsChannelVerticle.STATUS_INITIALISING => {
+        logger.info("Channel " + name + " ready")
+        setStatus(SicsChannelVerticle.STATUS_CONNECTED)
+      }
+      case SicsChannelVerticle.STATUS_CONNECTED => {
+        channelBuffer.appendBuffer(buf)
+        if (channelBuffer.getByte(channelBuffer.length - 1) == NEWLINE_BYTE) {
+          for (s <- channelBuffer.toString.split(NEWLINE)) {
+            var text = s.trim
+            logger.info("SICS reply: " + text)
+            var shouldContinue = true
+            while (shouldContinue) {
+              val reply = new JsonObject(text)
+              val replyMessage = bufferMap.remove(reply.getInteger("trans"))
+              if (!replyMessage.isEmpty) {
+                // Single reply
+                replyMessage.get.reply(reply)
+              } else {
+                // Stream reply
+                eventBus.send(SicsChannelVerticle.EVENT_STREAM_REPLY + "." + name + "." + reply.getInteger("trans"), reply)
+              }
+              // Split
+              val index = text.indexOf("}{")
+              if (index >= 0) {
+                text = text.substring(index + 1)
+                shouldContinue = true
+              } else {
+                shouldContinue = false
+              }
             }
+            channelBuffer = new Buffer
           }
         }
       }
     }
+  }
 
   /**
    * **************************************************************************
