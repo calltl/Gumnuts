@@ -9,6 +9,18 @@ import org.vertx.java.core.eventbus.Message
 import org.vertx.java.core.json.JsonObject
 import ch.psi.sics.hipadaba.Component
 import ch.psi.sics.hipadaba.SICS
+import scala.collection.JavaConversions._
+import org.vertx.java.core.json.JsonArray
+
+object HdbManagerVerticle {
+
+  val EVENT_GET_OBJECTS = "gumtree.sics.hdb.getObjects"
+
+  val EVENT_GET_OBJECT_BY_PATH= "gumtree.sics.hdb.getObjectByPath"
+    
+  val EVENT_GET_OBJECT_BY_DEVICE= "gumtree.sics.hdb.getObjectByDevice"
+    
+}
 
 /**
  * Supported events:
@@ -40,20 +52,28 @@ class HdbManagerVerticle extends ScalaVerticle {
       val hdbObject = pathMap(path)
       if (hdbObject != null) hdbObject.value = m.body.getString("value")
     })
+    
+    // Handle get objects request
+    eventBus.registerHandler(HdbManagerVerticle.EVENT_GET_OBJECTS, { m: Message[JsonObject] =>
+      val paths = m.body.getArray("paths")
+      val devices = m.body.getArray("devices")
+      
+    })
+    
+    // Handle get object by path request
+    eventBus.registerHandler(HdbManagerVerticle.EVENT_GET_OBJECT_BY_PATH, { m: Message[JsonObject] =>
+      val path = m.body.getString("path")
+      val hdbObject = pathMap(path)
+      m.reply(new JsonObject().putObject("hdb", hdbObject.createJsonObject))
+    })
+    
+    // Handle get object by device request
+    eventBus.registerHandler(HdbManagerVerticle.EVENT_GET_OBJECT_BY_DEVICE, { m: Message[JsonObject] =>
+      val paths = m.body.getArray("paths")
+      val devices = m.body.getArray("devices")
+      
+    })
   }
-
-  /**
-   * **************************************************************************
-   * Event handlers
-   * **************************************************************************
-   */
-  
-  val getComponentHandler = new Handler[Message[JsonObject]] {
-    def handle(message: Message[JsonObject]) = {
-      message.body.getArray("deviceId")
-    }
-  }
-  
   
   /**
    * **************************************************************************
@@ -65,7 +85,7 @@ class HdbManagerVerticle extends ScalaVerticle {
     // Create hdb object
     val basePath = if (parent == null) "" else parent.path
     val path = basePath + "/" + component.getId()
-    val hdbObject = new HdbObject(path, parent)
+    val hdbObject = new HdbObject(path, parent, convertComponentToJson(component))
     if (parent != null) parent.addChild(hdbObject)
     // Cache to path map
     pathMap += (path -> hdbObject)
@@ -76,4 +96,14 @@ class HdbManagerVerticle extends ScalaVerticle {
     component.getComponent().foreach(parseComponentModel(_, hdbObject))
   }
   
+  private def convertComponentToJson(component: Component): JsonObject = {
+    val json = new JsonObject
+    json.putString("id", component.getId())
+    json.putString("dataType", component.getDataType().getName())    
+    val properties = new JsonObject
+    json.putObject("properties", properties)
+    component.getProperty().foreach(p => properties.putArray(p.getId(), new JsonArray(p.getValue().toArray())))
+    return json
+  }
+
 }

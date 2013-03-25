@@ -18,7 +18,7 @@ object SicsStatusVerticle {
  *
  * EVENT_HDB_UPDATE_VALUE
  *   Type:
- *     Inbound
+ *     Outbound
  *   Description:
  *     Used internally to update hdb object value from SICS
  *   Input:

@@ -26,8 +26,8 @@ class SicsManagerVerticleTest extends ScalaVerticleTest {
 
   @Test
   def testGetChannels() = {
-    val handler = new CountDownLatchHandler[Message[JsonObject]](1)
     
+    // Wait for SICS manager to be ready
     var managerReady = false
     vertx.setPeriodic(100, { id: java.lang.Long =>
         eventBus.send(SicsManagerVerticle.EVENT_GET_STATUS, new JsonObject, { m: Message[JsonObject] =>
@@ -41,6 +41,7 @@ class SicsManagerVerticleTest extends ScalaVerticleTest {
       Thread.sleep(100)
     }
     
+    val handler = new CountDownLatchHandler[Message[JsonObject]](1)
     eventBus.send(SicsManagerVerticle.EVENT_GET_CHANNELS, EMPTY_OBJECT, handler)
     val channels = handler.poll(10, TimeUnit.SECONDS).body.getArray("names")
     assertEquals(2, channels.size())
