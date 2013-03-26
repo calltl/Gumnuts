@@ -11,6 +11,8 @@ import org.vertx.java.core.json.JsonObject
 import scala.collection.JavaConversions._
 import org.vertx.java.core.json.JsonArray
 import org.gumtree.gumnuts.sics.SicsManagerVerticle
+import org.gumtree.gumnuts.dae.DaeManagerVerticle
+import org.vertx.java.core.buffer.Buffer
 
 /**
  * RestServerVerticle provides ReSTful web services across HTTP connection
@@ -26,7 +28,7 @@ class RestServerVerticle extends ScalaVerticle {
     // Handle JMX request
     routeMatcher.get("/jmx/rest", { req: HttpServerRequest =>
       eventBus.send(JvmStatusVerticle.EVENT_GET_STATUS, EMPTY_OBJECT, { m: Message[JsonObject] =>
-        send(req, m.body.getObject("hdb").toString, getCallback(req))
+        send(req, m.body.getObject("data").toString, getCallback(req))
       })
     })
     // Handle SICS status
@@ -66,6 +68,16 @@ class RestServerVerticle extends ScalaVerticle {
         send(req, hdb.toString, getCallback(req))
       })
     })
+    // Handle dae request
+    routeMatcher.get("/dae/rest/image", { req: HttpServerRequest =>
+      var query = new Buffer
+      if (req.query != null) {
+        query.appendString(req.query)
+      }
+      eventBus.send(DaeManagerVerticle.EVENT_GET_IMAGE, query, { m: Message[Buffer] =>
+        req.response.setChunked(true).write(m.body).end
+      })
+    });
     // Start server
     vertx.createHttpServer.requestHandler(routeMatcher).listen(port)
   }

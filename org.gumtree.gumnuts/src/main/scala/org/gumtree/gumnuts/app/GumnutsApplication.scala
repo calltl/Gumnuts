@@ -5,7 +5,7 @@ import org.gumtree.gumnuts.rest.RestServerVerticle
 import org.gumtree.gumnuts.services.JvmStatusVerticle
 import org.gumtree.gumnuts.sics.SicsManagerVerticle
 import org.vertx.java.core.json.JsonObject
-import org.gumtree.gumnuts.dae.DaeImageVerticle
+import org.gumtree.gumnuts.dae.DaeManagerVerticle
 
 /**
  * The application entry point
@@ -18,7 +18,7 @@ class GumnutsApplication extends ScalaVerticle {
     // SICS manager
     deployVericle(classOf[SicsManagerVerticle].getName, container.getConfig.getObject(CONFIG_SICS_HEADER))
     // DAE manager
-    deployVericle(classOf[DaeImageVerticle].getName, container.getConfig.getObject(CONFIG_DAE_HEADER))
+    deployVericle(classOf[DaeManagerVerticle].getName, container.getConfig.getObject(CONFIG_DAE_HEADER))
     // Rest web server
     deployVericle(classOf[RestServerVerticle].getName, container.getConfig.getObject(CONFIG_REST_HEADER))
     // Web server

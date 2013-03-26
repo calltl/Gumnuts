@@ -22,6 +22,10 @@ trait VerticleConstants {
 
   // DAE
   def CONFIG_DAE_HEADER = "dae"
+  def CONFIG_DAE_HOST = "host"
+  def CONFIG_DAE_PORT = "port"
+  def CONFIG_DAE_LOGIN = "login"
+  def CONFIG_DAE_PASSWORD = "password"
 
   // REST
   def CONFIG_REST_HEADER = "rest"
