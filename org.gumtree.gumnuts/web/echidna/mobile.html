@@ -28,7 +28,7 @@
 				// Get components
 				getComponents();
 				// Get devices
-				getDevices();
+				// getDevices();
 				
 				window.setInterval(function() { update() }, 5000);
 			});
@@ -68,7 +68,7 @@
 			// Get SICS status and add to #sicsStatus
 			function getStatus() {
 				$.getJSON(
-					host + "/sics/rest?callback=?",
+					host + "/sics/rest/status?callback=?",
 					function(data) {
 						$("#sicsStatus").html("SICS Status: <b>" + data.status + "</b>");
 					}
@@ -81,7 +81,7 @@
 					host + "/sics/rest/hdbs?callback=?",
 					{
 						format: "json",
-						components: "/instrument/source/power,"
+						paths: "/instrument/source/power,"
 							+ "/monitor/bm1_counts,"
 							+ "/monitor/bm2_counts,"
 							+ "/sample/azimuthal_angle,"
@@ -90,11 +90,11 @@
 							+ "/sample/name"
 					},
 					function(data) {
-						var hdbs = data.hdbs;
-						for (var i = 0; i < hdbs.length; i++) {
-							var key = "#" + hdbs[i].path.replace(new RegExp("/", "g"), "_");
+						var paths = data.hdbs.paths;
+						for (var i = 0; i < paths.length; i++) {
+							var key = "#" + paths[i].path.replace(new RegExp("/", "g"), "_");
 							$(key).children().remove();
-							$(key).html("<b>" + hdbs[i].value + "</b> " + $(key).text());
+							$(key).html("<b>" + paths[i].value + "</b> " + $(key).text());
 						}
 					}
 				);

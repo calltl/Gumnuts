@@ -13,15 +13,16 @@ import scala.collection.JavaConversions._
 import org.vertx.java.core.json.JsonArray
 import org.gumtree.gumnuts.VerticleConstants
 import ch.psi.sics.hipadaba.DataType
+import java.lang.Exception
 
 object HdbManagerVerticle {
 
   val EVENT_GET_OBJECTS = "gumtree.sics.hdb.getObjects"
 
-  val EVENT_GET_OBJECT_BY_PATH= "gumtree.sics.hdb.getObjectByPath"
-    
-  val EVENT_GET_OBJECT_BY_DEVICE= "gumtree.sics.hdb.getObjectByDevice"
-    
+  val EVENT_GET_OBJECT_BY_PATH = "gumtree.sics.hdb.getObjectByPath"
+
+  val EVENT_GET_OBJECT_BY_DEVICE = "gumtree.sics.hdb.getObjectByDevice"
+
 }
 
 /**
@@ -31,7 +32,7 @@ object HdbManagerVerticle {
 class HdbManagerVerticle extends ScalaVerticle {
 
   var model: SICS = _
-  var pathMap: Map[String, HdbObject] = _ 
+  var pathMap: Map[String, HdbObject] = _
   var deviceMap: Map[String, HdbObject] = _
 
   def start() = {
@@ -44,12 +45,14 @@ class HdbManagerVerticle extends ScalaVerticle {
         // Convert model into hdb object and cache into maps
         pathMap = TreeMap[String, HdbObject]()
         deviceMap = TreeMap[String, HdbObject]()
-        model.getComponent().foreach(parseComponentModel(_))
+        val parent = new HdbObject("/")
+        pathMap += ("/" -> parent)
+        model.getComponent().foreach(parseComponentModel(_, parent))
         // Get initial values
         for (value <- pathMap.values) {
-         fetchHdbObjectValue(value)
-         // Slow down ... not to overflow SICS
-         Thread.sleep(1)
+          fetchHdbObjectValue(value)
+          // Slow down ... not to overflow SICS
+          Thread.sleep(1)
         }
         logger.info("Hipadaba model loaded")
       })
@@ -61,38 +64,74 @@ class HdbManagerVerticle extends ScalaVerticle {
       if (hdbObject != null) hdbObject.value = m.body.getString("value")
     })
     
+    // Handle state update from SICS
+    eventBus.registerHandler(SicsStatusVerticle.EVENT_HDB_UPDATE_STATE, { m: Message[JsonObject] =>
+      val path = m.body.getString("path")
+      val state = m.body.getString("state")
+      val hdbObject = pathMap(path)
+      state match {
+        case "STARTED" => hdbObject.state = HdbObject.STATUS_RUNNING
+        case "FINISH" => hdbObject.state = HdbObject.STATUS_OK
+        case _ => hdbObject.state = HdbObject.STATUS_OK
+      }
+    })
+
     // Handle get objects request
     eventBus.registerHandler(HdbManagerVerticle.EVENT_GET_OBJECTS, { m: Message[JsonObject] =>
+      val data = new JsonObject
+
+      val pathArray = new JsonArray
+      data.putArray("paths", pathArray)
       val paths = m.body.getArray("paths")
-      val devices = m.body.getArray("devices")
-      
+      if (paths != null) {
+        for (path <- paths) {
+          try {
+            pathArray.addObject(pathMap(path.toString()).createJsonObject)
+          } catch {
+            case e: Exception =>
+          }
+        }
+      }
+
+      val deviceArray = new JsonArray
+      data.putArray("devices", deviceArray)
+      val deviceIds = m.body.getArray("devices")
+      if (deviceIds != null) {
+        for (deviceId <- deviceIds) {
+          try {
+            deviceArray.addObject(deviceMap(deviceId.toString()).createJsonObject)
+          } catch {
+            case e: Exception =>
+          }
+        }
+      }
+
+      m.reply(data)
     })
-    
+
     // Handle get object by path request
     eventBus.registerHandler(HdbManagerVerticle.EVENT_GET_OBJECT_BY_PATH, { m: Message[JsonObject] =>
       val path = m.body.getString("path")
       val hdbObject = pathMap(path)
       m.reply(new JsonObject().putObject("hdb", hdbObject.createJsonObject))
     })
-    
+
     // Handle get object by device request
     eventBus.registerHandler(HdbManagerVerticle.EVENT_GET_OBJECT_BY_DEVICE, { m: Message[JsonObject] =>
       val paths = m.body.getArray("paths")
       val devices = m.body.getArray("devices")
-      
     })
   }
-  
+
   /**
    * **************************************************************************
    * Utilities
    * **************************************************************************
    */
-  
-  private def parseComponentModel(component: Component, parent: HdbObject = null): Unit = {
+
+  private def parseComponentModel(component: Component, parent: HdbObject): Unit = {
     // Create hdb object
-    val basePath = if (parent == null) "" else parent.path
-    val path = basePath + "/" + component.getId()
+    val path = if (parent.path == "/") "/" + component.getId() else parent.path + "/" + component.getId()
     val hdbObject = new HdbObject(path, parent, convertComponentToJson(component))
     if (parent != null) parent.addChild(hdbObject)
     // Cache to path map
@@ -103,8 +142,9 @@ class HdbManagerVerticle extends ScalaVerticle {
     // Recursion
     component.getComponent().foreach(parseComponentModel(_, hdbObject))
   }
-  
+
   private def fetchHdbObjectValue(hdbObject: HdbObject): Unit = {
+    if (hdbObject.component == null) return
     val dataType = hdbObject.component.getString("dataType")
     if (dataType == DataType.NONE_LITERAL.getName()) return
     eventBus.send(SicsChannelVerticle.EVENT_SEND + "." + CONST_SICS_CHANNEL_GENERAL, new JsonObject().putString("command", "hget " + hdbObject.path), { m: Message[JsonObject] =>
@@ -114,11 +154,11 @@ class HdbManagerVerticle extends ScalaVerticle {
       else if (dataType == DataType.TEXT_LITERAL.getName()) { hdbObject.value = data.getString(data.getFieldNames.head).toString() }
     })
   }
-  
+
   private def convertComponentToJson(component: Component): JsonObject = {
     val json = new JsonObject
     json.putString("id", component.getId())
-    json.putString("dataType", component.getDataType().getName())    
+    json.putString("dataType", component.getDataType().getName())
     val properties = new JsonObject
     json.putObject("properties", properties)
     component.getProperty().foreach(p => properties.putArray(p.getId(), new JsonArray(p.getValue().toArray())))

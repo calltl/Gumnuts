@@ -16,12 +16,15 @@ object SicsManagerVerticle {
   val STATUS_UNKNOWN = "unknown"
   val STATUS_INITIALISING = "initialising"
   val STATUS_READY = "ready"
+  val STATUS_DRIVING = "driving"
+  val STATUS_COUNTING = "counting"
 
   val EVENT_CONNECT_CHANNEL = "gumtree.sics.manager.connectChannel"
   val EVENT_DISCONNECT_CHANNEL = "gumtree.sics.manager.disconnectChannel"
   val EVENT_GET_CHANNELS = "gumtree.sics.manager.getChannels"
   val EVENT_GET_STATUS = "gumtree.sics.manager.getStatus"
   val EVENT_STATUS = "gumtree.sics.manager.status"
+  val EVENT_GET_SUID = "gumtree.sics.manager.getSUID"
 
 }
 
@@ -73,6 +76,7 @@ class SicsManagerVerticle extends ScalaVerticle {
 
   private var channelMap = Map[String, String]()
   private var status = SicsManagerVerticle.STATUS_UNKNOWN
+  private var suid: Number = 0
 
   def start() = {
 	// Status
@@ -124,6 +128,33 @@ class SicsManagerVerticle extends ScalaVerticle {
       m.reply(new JsonObject().putArray("names", new JsonArray(channelMap.keys.toList)))
     })
 
+    // Handle set SUID
+    eventBus.registerHandler(SicsStatusVerticle.EVENT_SUID_UPDATE_VALUE, { m: Message[JsonObject] =>
+      suid = m.body.getNumber("suid")
+    })
+    
+    // Handle get SUID
+    eventBus.registerHandler(SicsManagerVerticle.EVENT_GET_SUID, { m: Message[JsonObject] =>
+       m.reply(new JsonObject().putNumber("suid", suid))
+    })
+    
+    // Get initial SUID
+    eventBus.send(SicsChannelVerticle.EVENT_SEND + "." + CONST_SICS_CHANNEL_GENERAL, new JsonObject().putString("command", "hget /data/sics_suid"), { m: Message[JsonObject] =>
+      val data = m.body.getObject("data")
+      suid = data.getNumber("/data/sics_suid")
+    })
+    
+    // Get initial status
+    eventBus.send(SicsChannelVerticle.EVENT_SEND + "." + CONST_SICS_CHANNEL_GENERAL, new JsonObject().putString("command", "status"), { m: Message[JsonObject] =>
+      val status = m.body.getString("data").split("=")(1).trim()
+      status match {
+        case "Eager to execute commands" => setStatus(SicsManagerVerticle.STATUS_READY)
+        case "Driving" => setStatus(SicsManagerVerticle.STATUS_DRIVING)
+        case "Counting" => setStatus(SicsManagerVerticle.STATUS_COUNTING)
+        case _ => setStatus(SicsManagerVerticle.STATUS_UNKNOWN)
+      }
+    })
+
     /**
      * ************************************************************************
      * Verticle deployments
@@ -132,8 +163,6 @@ class SicsManagerVerticle extends ScalaVerticle {
 
     container.deployVerticle(classOf[HdbManagerVerticle].getName())
     container.deployVerticle(classOf[SicsStatusVerticle].getName())
-    
-    setStatus(SicsManagerVerticle.STATUS_READY)
   }
 
   /**
