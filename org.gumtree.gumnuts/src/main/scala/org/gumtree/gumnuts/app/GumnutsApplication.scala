@@ -23,6 +23,8 @@ class GumnutsApplication extends ScalaVerticle {
     deployVericle(classOf[RestServerVerticle].getName, container.getConfig.getObject(CONFIG_REST_HEADER))
     // Web server
     deployModule("vertx.web-server-v1.0", container.getConfig.getObject(CONFIG_WEB_HEADER))
+    // CRaSH shell
+    deployModule("org.crashub.shell-v1.0", container.getConfig.getObject(CONFIG_CRASH_HEADER))
   }
 
   /**

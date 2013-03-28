@@ -8,7 +8,7 @@ import org.vertx.java.core.json.JsonObject
 trait VerticleConstants {
 
   val EMPTY_OBJECT = new JsonObject
-  
+
   // SICS
   def CONFIG_SICS_HEADER = "sics"
   def CONFIG_SICS_HOST = "host"
@@ -33,5 +33,8 @@ trait VerticleConstants {
 
   // Web
   def CONFIG_WEB_HEADER = "web"
+
+  // CRaSH
+  def CONFIG_CRASH_HEADER = "crash"
 
 }
