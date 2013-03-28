@@ -31,6 +31,10 @@ trait VerticleConstants {
   def CONFIG_REST_HEADER = "rest"
   def CONFIG_REST_PORT = "port"
 
+  // WS
+  def CONFIG_WS_HEADER = "ws"
+  def CONFIG_WS_URL = "url"
+
   // Web
   def CONFIG_WEB_HEADER = "web"
 

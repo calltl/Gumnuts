@@ -15,6 +15,13 @@
 
 	<dependencies>
 		<dependency>
+			<groupId>scala-lang</groupId>
+			<artifactId>scala-library</artifactId>
+			<version>2.10.1</version>
+			<scope>system</scope>
+			<systemPath>${project.basedir}/lib/scala/scala-library-2.10.1.jar</systemPath>
+		</dependency>
+		<dependency>
 			<groupId>org.slf4j</groupId>
 			<artifactId>slf4j-api</artifactId>
 			<version>1.7.4</version>
@@ -167,10 +174,44 @@
 			<scope>system</scope>
 			<systemPath>${project.basedir}/lib/vertx/vertx-junit-annotations-1.3.2.jar</systemPath>
 		</dependency>
+		<dependency>
+			<groupId>axis</groupId>
+			<artifactId>axis</artifactId>
+			<version>1.4</version>
+			<scope>system</scope>
+			<systemPath>${project.basedir}/lib/axis/axis-1.4.jar</systemPath>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.axis</groupId>
+			<artifactId>axis-jaxrpc</artifactId>
+			<version>1.4</version>
+			<scope>system</scope>
+			<systemPath>${project.basedir}/lib/axis/axis-jaxrpc-1.4.jar</systemPath>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.axis</groupId>
+			<artifactId>axis-saaj</artifactId>
+			<version>1.4</version>
+			<scope>system</scope>
+			<systemPath>${project.basedir}/lib/axis/axis-saaj-1.4.jar</systemPath>
+		</dependency>
+		<dependency>
+			<groupId>axis</groupId>
+			<artifactId>axis-wsdl4j</artifactId>
+			<version>1.5.1</version>
+			<scope>system</scope>
+			<systemPath>${project.basedir}/lib/axis/axis-wsdl4j-1.5.1.jar</systemPath>
+		</dependency>
+		<dependency>
+			<groupId>commons-discovery</groupId>
+			<artifactId>commons-discovery</artifactId>
+			<version>0.2</version>
+			<scope>system</scope>
+			<systemPath>${project.basedir}/lib/axis/commons-discovery-0.2.jar</systemPath>
+		</dependency>
 	</dependencies>
 
 	<build>
-		<sourceDirectory>src/main/scala</sourceDirectory>
 		<plugins>
 			<plugin>
 				<groupId>net.alchim31.maven</groupId>

@@ -13,6 +13,7 @@ import org.vertx.java.core.json.JsonArray
 import org.gumtree.gumnuts.sics.SicsManagerVerticle
 import org.gumtree.gumnuts.dae.DaeManagerVerticle
 import org.vertx.java.core.buffer.Buffer
+import org.gumtree.gumnuts.ws.AnstoWebServerVerticle
 
 /**
  * RestServerVerticle provides ReSTful web services across HTTP connection
@@ -77,7 +78,13 @@ class RestServerVerticle extends ScalaVerticle {
       eventBus.send(DaeManagerVerticle.EVENT_GET_IMAGE, query, { m: Message[Buffer] =>
         req.response.setChunked(true).write(m.body).end
       })
-    });
+    })
+    // Handle ws request
+    routeMatcher.get("/ws/rest/reactor", { req: HttpServerRequest =>
+      eventBus.send(AnstoWebServerVerticle.EVENT_GET_REACTOR_POWER, EMPTY_OBJECT, { m: Message[JsonObject] =>
+        send(req, m.body.toString, getCallback(req))
+      })
+    })
     // Start server
     vertx.createHttpServer.requestHandler(routeMatcher).listen(port)
   }
