@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title>Reactor Power</title>
+		<script language="javascript" type="text/javascript" src="flot/jquery.js"></script>
+    	<script language="javascript" type="text/javascript" src="flot/jquery.flot.js"></script>
+	</head>
+	<body>
+		<h1>Reactor Power</h1>
+
+    <div id="placeholder" style="width:600px;height:300px;"></div>
+
+	<script type="text/javascript">
+		$(function () {
+    		var d1 = [];
+    		for (var i = 0; i < 14; i += 0.5)
+        		d1.push([i, Math.sin(i)]);
+
+		    var d2 = [];
+    
+			var i = 1;
+			
+			
+    		
+    		
+    		window.setInterval(function() { $.getJSON("http://localhost:8080/ws/rest/reactor?callback=?",
+    			function(data) {
+    				d2.push([i++, parseFloat(data.power)])
+    				$.plot($("#placeholder"), [ d2 ]);
+    			}
+    		); }, 1000);
+		});
+	</script>
+	</body>
+</html>
