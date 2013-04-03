@@ -69,6 +69,21 @@ class RestServerVerticle extends ScalaVerticle {
         send(req, hdb.toString, getCallback(req))
       })
     })
+    // Handle hdb set value
+    routeMatcher.putWithRegEx("/sics/rest/hdb/.*", { req: HttpServerRequest =>
+      val path = req.path.substring("/sics/rest/hdb".length())
+      var value: String = null
+      req.query.split("&").foreach(query => {
+        val tokens = query.split("=")
+        tokens(0) match {
+          case "value" => value = tokens(1)
+          case _ =>
+        }
+      })
+      if (value != null) {
+        eventBus.send(HdbManagerVerticle.EVENT_SET_OBJECT_BY_PATH, new JsonObject().putString("path", path).putString("value", value))
+      }
+    })
     // Handle dae request
     routeMatcher.get("/dae/rest/image", { req: HttpServerRequest =>
       var query = new Buffer

@@ -23,6 +23,7 @@ object HdbManagerVerticle {
 
   val EVENT_GET_OBJECT_BY_DEVICE = "gumtree.sics.hdb.getObjectByDevice"
 
+  val EVENT_SET_OBJECT_BY_PATH = "gumtree.sics.hdb.setObjectByPath"
 }
 
 /**
@@ -120,6 +121,15 @@ class HdbManagerVerticle extends ScalaVerticle {
     eventBus.registerHandler(HdbManagerVerticle.EVENT_GET_OBJECT_BY_DEVICE, { m: Message[JsonObject] =>
       val paths = m.body.getArray("paths")
       val devices = m.body.getArray("devices")
+    })
+    
+    // Handle set object by path request
+    eventBus.registerHandler(HdbManagerVerticle.EVENT_SET_OBJECT_BY_PATH, { m: Message[JsonObject] =>
+      val path = m.body.getString("path")
+      val value = m.body.getString("value")
+      if (pathMap.contains(path)) {
+        eventBus.send(SicsChannelVerticle.EVENT_SEND + "." + CONST_SICS_CHANNEL_GENERAL, new JsonObject().putString("command", "hset " + path + " " + value))
+      }
     })
   }
 
