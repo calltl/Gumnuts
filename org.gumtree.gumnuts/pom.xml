@@ -209,6 +209,13 @@
 			<scope>system</scope>
 			<systemPath>${project.basedir}/lib/axis/commons-discovery-0.2.jar</systemPath>
 		</dependency>
+		<dependency>
+			<groupId>org.python</groupId>
+			<artifactId>jython</artifactId>
+			<version>2.5.3</version>
+			<scope>system</scope>
+			<systemPath>${project.basedir}/lib/jython/jython-2.5.3.jar</systemPath>
+		</dependency>
 	</dependencies>
 
 	<build>
