@@ -7,6 +7,7 @@ import org.gumtree.gumnuts.sics.SicsManagerVerticle
 import org.vertx.java.core.json.JsonObject
 import org.gumtree.gumnuts.dae.DaeManagerVerticle
 import org.gumtree.gumnuts.ws.AnstoWebServerVerticle
+import org.gumtree.gumnuts.rest.WebSocketVerticle
 
 /**
  * The application entry point
@@ -24,6 +25,8 @@ class GumnutsApplication extends ScalaVerticle {
     deployVericle(classOf[AnstoWebServerVerticle].getName, container.getConfig.getObject(CONFIG_WS_HEADER))
     // Rest web server
     deployVericle(classOf[RestServerVerticle].getName, container.getConfig.getObject(CONFIG_REST_HEADER))
+    // Web socket
+    deployVericle(classOf[WebSocketVerticle].getName, container.getConfig.getObject(CONFIG_WEBSOCKET_HEADER))
     // Web server
     deployModule("vertx.web-server-v1.0", container.getConfig.getObject(CONFIG_WEB_HEADER))
     // CRaSH shell

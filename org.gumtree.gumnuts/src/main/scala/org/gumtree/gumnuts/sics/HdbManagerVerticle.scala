@@ -17,6 +17,8 @@ import java.lang.Exception
 
 object HdbManagerVerticle {
 
+  val EVENT_GET_ALL = "gumtree.sics.hdb.getAll"
+
   val EVENT_GET_OBJECTS = "gumtree.sics.hdb.getObjects"
 
   val EVENT_GET_OBJECT_BY_PATH = "gumtree.sics.hdb.getObjectByPath"
@@ -24,6 +26,9 @@ object HdbManagerVerticle {
   val EVENT_GET_OBJECT_BY_DEVICE = "gumtree.sics.hdb.getObjectByDevice"
 
   val EVENT_SET_OBJECT_BY_PATH = "gumtree.sics.hdb.setObjectByPath"
+    
+  val EVENT_OBJECT_UPDATE = "gumtree.sics.hdb.objectUpdate"
+
 }
 
 /**
@@ -62,9 +67,12 @@ class HdbManagerVerticle extends ScalaVerticle {
     eventBus.registerHandler(SicsStatusVerticle.EVENT_HDB_UPDATE_VALUE, { m: Message[JsonObject] =>
       val path = m.body.getString("path")
       val hdbObject = pathMap(path)
-      if (hdbObject != null) hdbObject.value = m.body.getString("value")
+      if (hdbObject != null) { 
+        hdbObject.value = m.body.getString("value")
+        eventBus.publish(HdbManagerVerticle.EVENT_OBJECT_UPDATE, new JsonObject().putString("path", path).putString("value", m.body.getString("value")))
+      }
     })
-    
+
     // Handle state update from SICS
     eventBus.registerHandler(SicsStatusVerticle.EVENT_HDB_UPDATE_STATE, { m: Message[JsonObject] =>
       val path = m.body.getString("path")
@@ -110,6 +118,29 @@ class HdbManagerVerticle extends ScalaVerticle {
       m.reply(data)
     })
 
+    // Handle get all objects
+    eventBus.registerHandler(HdbManagerVerticle.EVENT_GET_ALL, { m: Message[JsonObject] =>
+      val data = new JsonObject
+      val parent = pathMap.get("/").get
+      def processObjectStructure(hdbObject: HdbObject, data: JsonObject): Unit = {
+        data.putString("path", hdbObject.path)
+        data.putString("value", hdbObject.value)
+        data.putString("state", hdbObject.state)
+        if (hdbObject.component != null) data.mergeIn(hdbObject.component)
+        val childrenArray = new JsonArray
+        for (child <- hdbObject.getChildren) {
+          val data = new JsonObject
+          processObjectStructure(child, data)
+          childrenArray.addObject(data)
+        }
+        if (childrenArray.size() > 0) {
+        	data.putArray("children", childrenArray)
+        }
+      }
+      processObjectStructure(parent, data)
+      m.reply(data)
+    })
+
     // Handle get object by path request
     eventBus.registerHandler(HdbManagerVerticle.EVENT_GET_OBJECT_BY_PATH, { m: Message[JsonObject] =>
       val path = m.body.getString("path")
@@ -122,7 +153,7 @@ class HdbManagerVerticle extends ScalaVerticle {
       val paths = m.body.getArray("paths")
       val devices = m.body.getArray("devices")
     })
-    
+
     // Handle set object by path request
     eventBus.registerHandler(HdbManagerVerticle.EVENT_SET_OBJECT_BY_PATH, { m: Message[JsonObject] =>
       val path = m.body.getString("path")

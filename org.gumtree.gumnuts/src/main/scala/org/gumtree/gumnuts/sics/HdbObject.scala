@@ -22,12 +22,16 @@ class HdbObject(val path: String, val parent: HdbObject = null, val component: J
     children += (child.path -> child)
   }
   
+  def getChildren(): List[HdbObject] = {
+    children.values.toList
+  }
+  
   def value = currentValue
   def value_= (newValue: String) = currentValue = newValue
  
   def state = currentState
   def state_= (newState: String) = currentState = newState
-  
+    
   def createJsonObject(): JsonObject = {
     val json = new JsonObject
     json.putString("path", path)

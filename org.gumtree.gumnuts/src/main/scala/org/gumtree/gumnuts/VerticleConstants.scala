@@ -40,5 +40,8 @@ trait VerticleConstants {
 
   // CRaSH
   def CONFIG_CRASH_HEADER = "crash"
+    
+  // Websocket
+  def CONFIG_WEBSOCKET_HEADER = "websocket"
 
 }

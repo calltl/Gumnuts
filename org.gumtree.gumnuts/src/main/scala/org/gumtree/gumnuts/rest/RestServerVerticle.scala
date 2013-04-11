@@ -38,21 +38,27 @@ class RestServerVerticle extends ScalaVerticle {
         send(req, new JsonObject().putString("status", m.body.getString("status")).toString, getCallback(req))
       })
     })
-    // Handle multiple hdb reuest
+    // Handle multiple hdb request
     routeMatcher.get("/sics/rest/hdbs", { req: HttpServerRequest =>
       // Process queries
       val data = new JsonObject
-      req.query.split("&").foreach(query => {
-        val tokens = query.split("=")
-        tokens(0) match {
-          case "paths" => data.putArray("paths", new JsonArray(tokens(1).split(",").toList))
-          case "devices" => data.putArray("devices", new JsonArray(tokens(1).split(",").toList))
-          case _ =>
-        }
-      })
-      eventBus.send(HdbManagerVerticle.EVENT_GET_OBJECTS, data, { m: Message[JsonObject] =>
-        send(req, new JsonObject().putObject("hdbs", m.body).toString, getCallback(req))
-      })
+      if (req.query == null) {
+    	  eventBus.send(HdbManagerVerticle.EVENT_GET_ALL, data, { m: Message[JsonObject] =>
+          	send(req, new JsonObject().putObject("hdbs", m.body).toString, getCallback(req))
+        })
+      } else {
+        req.query.split("&").foreach(query => {
+          val tokens = query.split("=")
+          tokens(0) match {
+            case "paths" => data.putArray("paths", new JsonArray(tokens(1).split(",").toList))
+            case "devices" => data.putArray("devices", new JsonArray(tokens(1).split(",").toList))
+            case _ =>
+          }
+        })
+        eventBus.send(HdbManagerVerticle.EVENT_GET_OBJECTS, data, { m: Message[JsonObject] =>
+          send(req, new JsonObject().putObject("hdbs", m.body).toString, getCallback(req))
+        })
+      }
     })
     // Handle single hdb reuest
     routeMatcher.getWithRegEx("/sics/rest/hdb/.*", { req: HttpServerRequest =>
